@@ -14,4 +14,3 @@ parameter and output AZ, DNS, public IP
 </br>
 
 ---
-###### This project was part of Saudi Digital Acadmy's ( SDA ) DevOps  BootCamp 2022 
