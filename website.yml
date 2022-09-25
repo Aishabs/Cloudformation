@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: create a custom VPC, two ec2 servers, two security groups 
+Resources: 
+
+  CustomVpc: 
+    Type: AWS::EC2::VPC 
+    Properties: 
+      CidrBlock: 10.0.0.0/16 
+      EnableDnsSupport: true 
+      EnableDnsHostnames: true 
+      Tags: 
+        - 
+          Key: Name 
+          Value: VPC1 
+  InternetGateway: 
+    Type: AWS::EC2::InternetGateway 
+    Properties: 
+      Tags: 
+      - Key: Name 
+        Value: VPC Internet Gateway 
+  GatewayAttachment: 
+    Type: AWS::EC2::VPCGatewayAttachment 
+    Properties: 
+      VpcId: !Ref CustomVpc 
+      InternetGatewayId: !Ref InternetGateway 
+  Subnet: 
+    Type: AWS::EC2::Subnet 
+    Properties: 
+      CidrBlock: 10.0.0.0/24 
+      MapPublicIpOnLaunch: true 
+      VpcId: !Ref CustomVpc 
+  RouteTable: 
+    Type: AWS::EC2::RouteTable 
+    Properties: 
+      VpcId: !Ref CustomVpc 
+  InternetRoute: 
+    Type: AWS::EC2::Route
+    DependsOn: 
+      - GatewayAttachment 
+    Properties: 
+      RouteTableId: !Ref RouteTable 
+      GatewayId: !Ref InternetGateway 
+      DestinationCidrBlock: 0.0.0.0/0 
+  SubnetRouteTableAssoc: 
+    Type: AWS::EC2::SubnetRouteTableAssociation 
+    Properties: 
+      RouteTableId: !Ref RouteTable 
+      SubnetId: !Ref Subnet 
+  Instance1: 
+    Type: AWS::EC2::Instance 
+    DependsOn: 
+      - InternetRoute 
+      - SubnetRouteTableAssoc 
+    Properties: 
+      InstanceType: t2.micro 
+      SubnetId: !Ref Subnet 
+      ImageId: ami-8lff7528ff583bf9a S
+      ecurityGroupIds: 
+        - !Ref SampleSecurityGroup U
+      serData: 
+        Fn::Base64: !Sub | 
+        #!/bin/bash -xe 
+        yum update -y 
+        yum install -y httpd 
+        systemctl start httpd 
+        systemctl enable httpd 
+        echo "My Name :Aisha ALsubaie Cohort :Online" > /var/www/html/index.html 
+  Instance2: 
+    Type: AWS::EC2::Instance 
+    Properties: 
+      InstanceType: t2.micro 
+      ImageId: ami-0cfg7528ff583bf9a 
+      SecurityGroupIds: 
+        - !Ref SecurityGroup 
+  SampleSecurityGroup: 
+  Type: AWS::EC2::SecurityGroup 
+  Properties:
+    GroupDescription: Allow http to client host 
+    VpcId: !Ref CustomVpc 
+    SecurityGroupIngress: 
+      - IpProtocol: tcp 
+        FromPort: 80 
+        ToPort: 80 
+        CidrIp: 0.0.0.0/0 
+      - IpProtocol: tcp 
+        FromPort: 22 
+        ToPort: 22 
+        CidrIp: 94.49.7.148/32 
+  SecurityGroup: 
+    Type: AWS::EC2::SecurityGroup 
+    Properties: 
+      GroupDescription: Allow http to client host 
+      SecurityGroupIngress: 
+        - IpProtocol: tcp 
+          FromPort: 80 
+          ToPort: 80 
+          CidrIp: 0.0.0.0/0 
+        - IpProtocol: tcp 
+          FromPort: 22 
+          ToPort: 22 
+          CidrIp: 94.49.7.148/32
